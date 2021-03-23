@@ -42,6 +42,26 @@ DumpAtomSmartSim::~DumpAtomSmartSim()
 
 void DumpAtomSmartSim::write()
 {
+
+  if (domain->triclinic == 0) {
+    boxxlo = domain->boxlo[0];
+    boxxhi = domain->boxhi[0];
+    boxylo = domain->boxlo[1];
+    boxyhi = domain->boxhi[1];
+    boxzlo = domain->boxlo[2];
+    boxzhi = domain->boxhi[2];
+  } else {
+    boxxlo = domain->boxlo_bound[0];
+    boxxhi = domain->boxhi_bound[0];
+    boxylo = domain->boxlo_bound[1];
+    boxyhi = domain->boxhi_bound[1];
+    boxzlo = domain->boxlo_bound[2];
+    boxzhi = domain->boxhi_bound[2];
+    boxxy = domain->xy;
+    boxxz = domain->xz;
+    boxyz = domain->yz;
+  }
+
   /* Construct SILC Client object
   */
   SILC::Client client(true);
@@ -55,6 +75,7 @@ void DumpAtomSmartSim::write()
   /* Add a "domain" metadata field to the DataSet to hold information
   about the simulation domain.
   */
+
   dataset.add_meta_scalar("domain", &(domain->boxlo[0]), SILC::MetaDataType::dbl);
   dataset.add_meta_scalar("domain", &(domain->boxhi[0]), SILC::MetaDataType::dbl);
   dataset.add_meta_scalar("domain", &(domain->boxlo[1]), SILC::MetaDataType::dbl);
@@ -83,9 +104,8 @@ void DumpAtomSmartSim::write()
 
   /* Perform internal LAMMPS output preprocessing.
   */
-  int n_local = atom->nlocal;
-  int n_cols = (image_flag == 1) ? 8 : 5;
-
+    int n_local = atom->nlocal;
+    int n_cols = (image_flag == 1) ? 8 : 5;
     nme = count();
     if (nme > maxbuf) {
         maxbuf = nme;
@@ -105,7 +125,7 @@ void DumpAtomSmartSim::write()
     if (sort_flag)
         sort();
 
-    int* data_int = new int[n_local];
+    int64_t* data_int = new int64_t[n_local];
     double* data_dbl = new double[n_local];
     int buf_len = n_cols*n_local;
 
@@ -113,12 +133,12 @@ void DumpAtomSmartSim::write()
     tensor_length.push_back(n_local);
 
     //Add atom ID tensor to the DataSet
-    this->_pack_buf_into_array<int>(data_int, buf_len, 0, n_cols);
+    this->_pack_buf_into_array<int64_t>(data_int, buf_len, 0, n_cols);
     dataset.add_tensor("atom_id", data_int, tensor_length,
                        SILC::TensorType::int64, SILC::MemoryLayout::contiguous);
 
     //Add atom type tensor to the DataSet
-    this->_pack_buf_into_array<int>(data_int, buf_len, 1, n_cols);
+    this->_pack_buf_into_array<int64_t>(data_int, buf_len, 1, n_cols);
     dataset.add_tensor("atom_type", data_int, tensor_length,
                        SILC::TensorType::int64, SILC::MemoryLayout::contiguous);
 
@@ -143,17 +163,17 @@ void DumpAtomSmartSim::write()
     dataset.add_meta_scalar("image_flag", &image_flag, SILC::MetaDataType::int64);
     if (image_flag == 1) {
       //Add atom ix image tensor to the DataSet
-      this->_pack_buf_into_array<int>(data_int, buf_len, 5, n_cols);
+      this->_pack_buf_into_array<int64_t>(data_int, buf_len, 5, n_cols);
       dataset.add_tensor("atom_ix", data_int, tensor_length,
                          SILC::TensorType::int64, SILC::MemoryLayout::contiguous);
 
       //Add atom iy image tensor to the DataSet
-      this->_pack_buf_into_array<int>(data_int, buf_len, 6, n_cols);
+      this->_pack_buf_into_array<int64_t>(data_int, buf_len, 6, n_cols);
       dataset.add_tensor("atom_iy", data_int, tensor_length,
                          SILC::TensorType::int64, SILC::MemoryLayout::contiguous);
 
       //Add atom iz image tensor to the DataSet
-      this->_pack_buf_into_array<int>(data_int, buf_len, 7, n_cols);
+      this->_pack_buf_into_array<int64_t>(data_int, buf_len, 7, n_cols);
       dataset.add_tensor("atom_iz", data_int, tensor_length,
                          SILC::TensorType::int64, SILC::MemoryLayout::contiguous);
     }
@@ -162,7 +182,7 @@ void DumpAtomSmartSim::write()
     */
     client.put_dataset(dataset);
 
-    /* Free temporary memory needed to preprocess LAMMPS output
+    /* Free temporary memory neeed to preprocess LAMMPS output
     */
     delete[] data_int;
     delete[] data_dbl;
@@ -207,6 +227,6 @@ void DumpAtomSmartSim::_pack_buf_into_array(T* data, int length,
   // pack the dump buffer into an array to send to the database
   int c = 0;
   for(int i = start_pos; i < length; i+=stride) {
-    data[c++] = buf[i];
+      data[c++] = buf[i];
   }
 }
