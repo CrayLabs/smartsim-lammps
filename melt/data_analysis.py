@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from silc import Client, Dataset
+from smartredis import Client
 
 if __name__ == "__main__":
 
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # Initialize the SmartSim client object and indicate
     # that a database cluster is being used with
     # cluster = True
-    client = Client(cluster=True)
+    client = Client(address="127.0.0.1:6379", cluster=False)
 
     # Create empty lists that we will fill with simulation data
     atom_id = []
@@ -58,8 +58,8 @@ if __name__ == "__main__":
     # The printed data will be piped by SmartSim to an output file
     # in the experiment directory.
     n_atoms = len(atom_id)
-    for i in range(n_atoms):
-        print(f"{atom_id[i]} {atom_type[i]} {atom_x[i]} {atom_y[i]} {atom_z[i]}")
+    #for i in range(n_atoms):
+    #    print(f"{atom_id[i]} {atom_type[i]} {atom_x[i]} {atom_y[i]} {atom_z[i]}")
 
     # We plot the atom positions to check that the atom position distribution
     # is uniform, as expected.
