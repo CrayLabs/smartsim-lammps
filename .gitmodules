@@ -1,6 +1,0 @@
-[submodule "melt/lammps"]
-	path = melt/lammps
-	url = https://github.com/Spartee/lammps.git
-[submodule "melt/SmartRedis"]
-	path = melt/SmartRedis
-	url = https://github.com/CrayLabs/SmartRedis.git
