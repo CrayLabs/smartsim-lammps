@@ -1,33 +1,47 @@
 from smartsim import Experiment, slurm
-from smartsim.settings import RunSettings
-from smartsim.database import Orchestrator
+from smartsim.settings import RunSettings, SrunSettings
+from smartsim.database import Orchestrator, SlurmOrchestrator
+from smartredis import Client
 
 # Create a SmartSim Experiment using the default
-experiment = Experiment("lammps_experiment")
+experiment = Experiment("lammps_experiment", launcher="slurm")
 
-lmps = RunSettings("lmp", "-i in.melt", run_command="mpirun", run_args={"-np": "6"})
+exe = "/lus/cls01029/spartee/poseidon/smartsim-lammps/lammps/cmake/build/lmp"
 
-
-# Create the LAMMPS SmartSim model entity with the previously
-# defined run settings
+lmps = SrunSettings(exe, exe_args="-i in.melt")
 lammps = experiment.create_model("lammps",
                                  run_settings=lmps)
-
-# Attach the simulation input file in.melt to the entity so that
-# the input file is copied into the experiment directory when it is created
 lammps.attach_generator_files(to_copy=["./in.melt"])
 
-db = Orchestrator()
+# create atom visualizer model reference
+vis_settings = SrunSettings("python", "data_analysis.py")
+vis_settings.set_nodes(1)
+vis_settings.set_tasks(1)
 
-# Generate the experiment directory structure and copy the files
-# attached to SmartSim entities into that folder structure.
-experiment.generate(lammps, db, overwrite=True)
+vis_model = experiment.create_model("atom_viz", vis_settings)
+vis_model.attach_generator_files(to_copy=["./data_analysis.py"])
+
+# Create database
+db = SlurmOrchestrator(port=6780,
+                       db_nodes=1,
+                       batch=False,
+                       interface="ipogif0")
+
+experiment.generate(lammps, db, vis_model, overwrite=True)
 
 # Start the model and orchestrator
-experiment.start(lammps, db, summary=True)
+experiment.start(lammps,
+                 vis_model,
+                 db,
+                 block=True,
+                 summary=True)
 
-# When the model and analysis script are complete, stop the
-# orchestrator with the stop() call which will
-# stop all running jobs when no entities are specified
-#experiment.stop(db)
+experiment.stop(db)
+
+
+#if __name__ == "__main__":
+#    import argparse
+#    parser = argparse.ArgumentParser(description="Run Lennard-Jones Melt Experiment")
+#    parser.add_argument("--sim_nodes", type=int, default=1, help="Number of nodes for LAMMPS to run on")
+#    parser.add_argument("--db_nodes", type=int, default=1, help="Number of nodes for the database to run on")
 

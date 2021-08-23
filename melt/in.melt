@@ -23,4 +23,4 @@ dump		id all atom 50 dump.melt
 dump		smart_sim all atom/smartsim 50 atoms
 
 thermo		50
-run		250
+run		1000

@@ -3,32 +3,11 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from smartredis import Client
 
-if __name__ == "__main__":
 
-    # The command line argument "ranks" is used to
-    # know how many MPI ranks were used to run the
-    # LAMMPS simulation because each MPI rank will send
-    # a unique key to the database.  This command line
-    # argument is provided programmatically as a
-    # run setting in the SmartSim experiment script.
-    # Similarly, the command line argument "time"
-    # is used to set which time step data will be
-    # pulled from the database.  This is also set
-    # programmatically as a run setting in the SmartSim
-    # experiment script
-    import argparse
-    argparser = argparse.ArgumentParser()
-    argparser.add_argument("--ranks", type=int, default=1)
-    argparser.add_argument("--time", type=int, default=0)
-    args = argparser.parse_args()
+def plot_timestep(n_ranks, t_step):
 
-    n_ranks = args.ranks
-    t_step = args.time
-
-    # Initialize the SmartSim client object and indicate
-    # that a database cluster is being used with
-    # cluster = True
-    client = Client(address="127.0.0.1:6379", cluster=False)
+    # connect SmartRedis Python client
+    client = Client(cluster=False)
 
     # Create empty lists that we will fill with simulation data
     atom_id = []
@@ -46,6 +25,10 @@ if __name__ == "__main__":
 
         print(f"Retrieving DataSet {dataset_key}")
 
+        key_exists = client.poll_key(dataset_key, 5000, 60)
+        if not key_exists:
+            raise Exception("Timeout waiting for new data to plot")
+
         dataset = client.get_dataset(dataset_key)
 
         atom_id.extend(dataset.get_tensor("atom_id"))
@@ -54,20 +37,40 @@ if __name__ == "__main__":
         atom_y.extend(dataset.get_tensor("atom_y"))
         atom_z.extend(dataset.get_tensor("atom_z"))
 
-    # We print the atom position data to check the accuracy of our results.
-    # The printed data will be piped by SmartSim to an output file
-    # in the experiment directory.
-    n_atoms = len(atom_id)
-    #for i in range(n_atoms):
-    #    print(f"{atom_id[i]} {atom_type[i]} {atom_x[i]} {atom_y[i]} {atom_z[i]}")
-
     # We plot the atom positions to check that the atom position distribution
     # is uniform, as expected.
-    fig = plt.figure()
+    fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection='3d')
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
     ax.set_title('Atom position')
     ax.scatter(atom_x, atom_y, atom_z)
-    plt.savefig('atom_position.pdf')
+    fig.show()
+    plt.savefig(f'atom_position_{str(t_step)}.pdf')
+
+
+if __name__ == "__main__":
+
+    # The command line argument "ranks" is used to
+    # know how many MPI ranks were used to run the
+    # LAMMPS simulation because each MPI rank will send
+    # a unique key to the database.  This command line
+    # argument is provided programmatically as a
+    # run setting in the SmartSim experiment script.
+    # Similarly, the command line argument "time"
+    # is used to set which time step data will be
+    # pulled from the database.  This is also set
+    # programmatically as a run setting in the SmartSim
+    # experiment script
+    import argparse
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("--ranks", type=int, default=1)
+    argparser.add_argument("--steps", type=int, default=1000)
+    args = argparser.parse_args()
+
+    n_ranks = args.ranks
+    t_step = args.steps
+
+    for i in range(0, t_step, 100):
+        plot_timestep(n_ranks, i)
