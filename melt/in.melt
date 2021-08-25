@@ -1,9 +1,9 @@
 
 # 3d Lennard-Jones melt
 
-variable	x index 1
-variable	y index 1
-variable	z index 1
+variable	x index ;SCALE_X;
+variable	y index ;SCALE_Y;
+variable	z index ;SCALE_Z;
 
 variable	xx equal 20*$x
 variable	yy equal 20*$y
@@ -29,4 +29,4 @@ neigh_modify	delay 0 every 20 check no
 dump		smart_sim all atom/smartsim 50 atoms
 
 fix		1 all nve
-run		1000
+run		;TIMESTEPS;
