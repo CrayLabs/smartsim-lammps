@@ -1,12 +1,9 @@
 import time
 import psutil
-import matplotlib
-matplotlib.use('Agg')
+import numpy as np
 from multiprocessing import Pool
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_agg import FigureCanvasAgg
 from smartredis import Client
-
+import ipyvolume as ipv
 
 class Worker:
     def __init__(self):
@@ -62,21 +59,27 @@ def plot_timestep(worker_pool, n_ranks, t_step):
         atom_z.extend(data[2])
     timings["data"] += time.time() - data_start
 
+    # convert to numpy
+    x = np.array(atom_x)
+    y = np.array(atom_y)
+    z = np.array(atom_z)
+
     plot_start = time.time()
 
-    # Create base figure
-    fig = plt.figure(figsize=(12, 8))
-    ax = fig.add_subplot(111, projection='3d')
-    ax.set_title(f'Atom position at timestep {str(t_step)}')
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_zlabel('z')
-    ax.scatter(atom_x, atom_y, atom_z, c='g', s=2)
+    # Use Ipyvolume to plot the data
+    ipv.scatter(x, y, z, size=.5, marker='sphere', color='green')
+    ipv.save(f'atom_position_{str(t_step)}.html')
+    ipv.clear()
 
     timings["plot"] += time.time() - plot_start
 
+    # add to final list for animation
+    ATOMS_X.append(x)
+    ATOMS_Y.append(y)
+    ATOMS_Z.append(z)
+
 if __name__ == "__main__":
-    import sys
+
     import argparse
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--ranks", type=int, default=384)
@@ -93,7 +96,11 @@ if __name__ == "__main__":
     # start pool of workers
     work_pool = WorkerPool(num_workers=args.workers)
 
-    for i in range(0, args.steps, 1000):
+    ATOMS_X = []
+    ATOMS_Y = []
+    ATOMS_Z = []
+
+    for i in range(0, args.steps, 100):
         plot_timestep(work_pool, args.ranks, i)
 
     print(f"Data retrieval time: {timings['data']}")
@@ -102,7 +109,9 @@ if __name__ == "__main__":
     work_pool.shutdown()
 
     if args.save:
-        figs = list(map(plt.figure, plt.get_fignums()))
-        for i, fig in enumerate(figs):
-            canvas = FigureCanvasAgg(fig)
-            canvas.print_figure(f'atom_position_{str(i * 1000)}.png', dpi=100)
+        ani = ipv.scatter(np.array(ATOMS_X),
+                          np.array(ATOMS_Y),
+                          np.array(ATOMS_Z), size=.5, marker='sphere', color='green')
+        ipv.animation_control(ani, interval=500)
+        ipv.save("Lennard-Jones-Animation.html")
+
