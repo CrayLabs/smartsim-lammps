@@ -7,13 +7,14 @@ import ipyvolume as ipv
 
 class Worker:
     def __init__(self):
-        self.client = Client(cluster=False)
+        self.client = Client(cluster=True)
 
     def __call__(self, key):
         # returns a tuple of np.arrays
-        key_exists = self.client.poll_key(key, 100, 100)
+        key_exists = self.client.poll_key(key, 20, 1000)
         if not key_exists:
             raise Exception("Timeout waiting for new data to plot")
+
         dataset = self.client.get_dataset(key)
         atom_data = (dataset.get_tensor("atom_x"),
                      dataset.get_tensor("atom_y"),
@@ -67,9 +68,10 @@ def plot_timestep(worker_pool, n_ranks, t_step):
     plot_start = time.time()
 
     # Use Ipyvolume to plot the data
-    ipv.scatter(x, y, z, size=.5, marker='sphere', color='green')
-    ipv.save(f'atom_position_{str(t_step)}.html')
-    ipv.clear()
+    if args.save:
+        ipv.scatter(x, y, z, size=.5, marker='sphere', color='green')
+        ipv.save(f'atom_position_{str(t_step)}.html')
+        ipv.clear()
 
     timings["plot"] += time.time() - plot_start
 
@@ -90,7 +92,8 @@ if __name__ == "__main__":
 
     timings = {
         "data": 0.0,
-        "plot": 0.0
+        "plot": 0.0,
+        "animation": 0.0
     }
 
     # start pool of workers
@@ -103,15 +106,19 @@ if __name__ == "__main__":
     for i in range(0, args.steps, 100):
         plot_timestep(work_pool, args.ranks, i)
 
-    print(f"Data retrieval time: {timings['data']}")
-    print(f"Plotting time: {timings['plot']}")
-
     work_pool.shutdown()
 
     if args.save:
+        anim_start = time.time()
         ani = ipv.scatter(np.array(ATOMS_X),
                           np.array(ATOMS_Y),
                           np.array(ATOMS_Z), size=.5, marker='sphere', color='green')
         ipv.animation_control(ani, interval=500)
         ipv.save("Lennard-Jones-Animation.html")
+        timings["animation"] = time.time() - anim_start
 
+    print(f"Data retrieval time: {timings['data']}")
+
+    if args.save:
+        print(f"Plotting time: {timings['plot']}")
+        print(f"Animation creation time: {timings['animation']}")
