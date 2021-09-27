@@ -23,7 +23,7 @@ The source code for the integration is located in the LAMMPS submodule as a
 part of this repository in ``lammps/src/SMARTSIM``.
 
 
-## Preqrequities
+## Prerequisites
 
 First the following requirements will need to be installed in a Python environment
 on your system.
