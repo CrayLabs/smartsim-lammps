@@ -7,7 +7,7 @@ to be merged) of LAMMPS for online data analysis and visualization.
 
 ## Example: Lennard-Jones Melt Benchmark
 
-In the ``melt/`` directory is an example of how to use SmartSim to stream
+The ``melt/`` directory demonstrates how to use SmartSim to stream
 atom data, in the form of ``DataSet`` objects, to a running Python process
 for data visualization.
 
@@ -22,11 +22,69 @@ dump		smart_sim all atom/smartsim 100 atoms
 The source code for the integration is located in the LAMMPS submodule as a
 part of this repository in ``lammps/src/SMARTSIM``.
 
+## Getting Started
 
-## Prerequisites
+### MiniConda
 
-First the following requirements will need to be installed in a Python environment
-on your system.
+This demonstration uses MiniConda. Although it is not strictly required, we recommend its use to simplify the tracking of different environments.
+
+MiniConda can be installed via `wget` of an appropriate installation script, such as one from
+
+ ```https://docs.conda.io/en/latest/miniconda.html#linux-installers```
+
+Theta users: on Theta, MiniConda is available through the module system and can be activated via the command 
+
+```module load miniconda-3```
+
+We recommend creating a separate environment for SmartSim and lammps
+
+```bash
+conda create --name=smartsim-lammps python=3.8.5
+conda activate smartsim-lammps 
+```
+
+### Repositories
+
+To get started, clone the `smartsim-lamps` repository
+
+```bash
+git clone --recursive https://github.com/CrayLabs/smartsim-lammps
+```
+
+You will also need the SmartRedis repository. The lammps build step later assumes that SmartRedis is in a directory parallel to ``smartsim-lammps`` named ``SmartRedis``.
+
+```bash
+git clone https://github.com/CrayLabs/SmartRedis
+cd SmartRedis
+make lib
+```
+
+## Additional Components
+
+### For Theta users
+
+Before installing additional components, Theta users must run the following commands to configure the runtime environment.
+
+```bash
+module purge
+module load PrgEnv-cray
+module load cray-mpich
+module unload atp perftools-base cray-libsci
+export CRAYPE_LINK_TYPE=dynamic
+```
+
+### git-lfs
+
+SmartSim requires `git-lfs`. Install and configure it via the following commands
+
+```bash
+conda install git-lfs
+git-lfs install
+```
+
+### Python Components
+
+The following requirements will need to be installed in a Python environment on your system.
 
 ```text
 smartsim==0.3.2
@@ -37,39 +95,21 @@ ipyvolume==0.5.2
 Install all of these requirements by running
 
 ```bash
-cd smartsim-lammps
+cd smartsim-lammps/melt
 pip install -r requirements.txt
 smart --device cpu
 ```
 
-### For Theta users
-
-Before installing the above requirements, Theta users must run the
-following commands.
-
-```bash
-make clobber
-module purge
-module load PrgEnv-cray
-module load cray-mpich
-module unload atp perftools-base cray-libsci
-export CRAYPE_LINK_TYPE=dynamic
-```
-
 ## Setup
 
-Clone the repository
-
-```bash
-git clone --recursive https://github.com/CrayLabs/smartsim-lammps
-```
 
 Next, build LAMMPS. Theta (XC users in general) users be sure to have the above
 modules loaded and environment setup.
 
 ```bash
 cd smartsim-lammps/lammps/cmake
-mkdir build && cd build
+mkdir build 
+cd build
 CC=cc CXX=CC cmake .. -DBUILD_MPI=yes -DPKG_SMARTSIM=yes
 make -j 4 # or higher if you have more procs
 export PATH=$(pwd):$PATH
@@ -104,7 +144,7 @@ If a single database node is used, LAMMPS will need to be recompiled with the cl
 cluster flag set to false in the initializer. By default, the case is setup to run
 with a 3 node database cluster.
 
-To run the example on Theta
+To run the example on Theta use the following command (be sure to edit the script to point to your conda environment)
 
 ```bash
 qsub run-theta.sh
