@@ -1,3 +1,4 @@
 [submodule "lammps"]
 	path = lammps
 	url = https://github.com/CrayLabs/LAMMPS.git
+	branch = master
