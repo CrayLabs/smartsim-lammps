@@ -5,6 +5,12 @@ LAMMPS is a popular Molecular Dyanmics (MD) library written in C++. This
 repository integrates the SmartRedis C++ client into a fork (hopefully soon
 to be merged) of LAMMPS for online data analysis and visualization.
 
+An example of the interactive LAMMPS visualization with ipyvolume:
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/13009163/135548047-a9859fa3-fec6-4ead-97ff-eaf031baac3f.png"/>
+</p>
+
 ## Example: Lennard-Jones Melt Benchmark
 
 The ``melt/`` directory demonstrates how to use SmartSim to stream
