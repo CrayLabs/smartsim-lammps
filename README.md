@@ -144,7 +144,7 @@ SmartSim will take care of writing the LAMMPS parameters into the configuration
 file at runtime as well as launching both lammps, the database, and the analysis
 out onto the system with the specified resource requirements.
 
-The user should make sure to use their own Python environment in the batch scipt.
+The user should make sure to use their own Python environment in the batch script.
 
 If a single database node is used, LAMMPS will need to be recompiled with the client
 cluster flag set to false in the initializer. By default, the case is setup to run
