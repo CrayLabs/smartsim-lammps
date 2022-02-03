@@ -38,7 +38,7 @@ MiniConda can be installed via `wget` of an appropriate installation script, suc
 
  ```https://docs.conda.io/en/latest/miniconda.html#linux-installers```
 
-Theta users: on Theta, MiniConda is available through the module system and can be activated via the command 
+Theta users: on Theta, MiniConda is available through the module system and can be activated via the command
 
 ```module load miniconda-3```
 
@@ -46,7 +46,7 @@ We recommend creating a separate environment for SmartSim and lammps
 
 ```bash
 conda create --name=smartsim-lammps python=3.8.5
-conda activate smartsim-lammps 
+conda activate smartsim-lammps
 ```
 
 ### Repositories
@@ -93,8 +93,8 @@ git-lfs install
 The following requirements will need to be installed in a Python environment on your system.
 
 ```text
-smartsim==0.3.2
-smartredis==0.2.0
+smartsim==0.4.0
+smartredis==0.3.0
 ipyvolume==0.5.2
 ```
 
@@ -114,7 +114,7 @@ modules loaded and environment setup.
 
 ```bash
 cd smartsim-lammps/lammps/cmake
-mkdir build 
+mkdir build
 cd build
 CC=cc CXX=CC cmake .. -DBUILD_MPI=yes -DPKG_SMARTSIM=yes
 make -j 4 # or higher if you have more procs

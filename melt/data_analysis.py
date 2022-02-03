@@ -11,7 +11,7 @@ class Worker:
 
     def __call__(self, key):
         # returns a tuple of np.arrays
-        key_exists = self.client.poll_key(key, 20, 1000)
+        key_exists = self.client.poll_dataset(key, 20, 1000)
         if not key_exists:
             raise Exception("Timeout waiting for new data to plot")
 
