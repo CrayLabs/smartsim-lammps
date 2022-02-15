@@ -49,6 +49,15 @@ conda create --name=smartsim-lammps python=3.8.5
 conda activate smartsim-lammps
 ```
 
+### CMake
+
+Some systems (e.g. Theta) may have a default version of CMake which is insufficient for building the SmartRedis library
+(v3.13 or later is required).  It is recommended that CMake is installed via conda:
+
+```bash
+conda install cmake
+```
+
 ### Repositories
 
 To get started, clone the `smartsim-lamps` repository
@@ -77,15 +86,6 @@ module load PrgEnv-cray
 module load cray-mpich
 module unload atp perftools-base cray-libsci
 export CRAYPE_LINK_TYPE=dynamic
-```
-
-### CMake
-
-Some systems (e.g. Theta) may have a default version of CMake which is insufficient for building the SmartRedis library
-(v3.13 or later is required).  It is recommended that CMake is installed via conda:
-
-```bash
-conda install cmake
 ```
 
 ### git-lfs
