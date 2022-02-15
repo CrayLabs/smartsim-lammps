@@ -7,7 +7,12 @@ def create_lammps_model(experiment, sim_nodes, sim_ppn, steps, scale):
     lmps = experiment.create_run_settings(exe, run_command="auto",
                                           exe_args="-i in.melt")
 
-    lmps.set_nodes(sim_nodes)
+    # Slurm requires the number of nodes but aprun does not support this
+    try:
+        lmps.set_nodes(sim_nodes)
+    except AttributeError:
+        pass
+
     lmps.set_tasks(sim_nodes*sim_ppn)
     lmps.set_tasks_per_node(sim_ppn)
 
@@ -38,7 +43,11 @@ def create_visualizer(experiment, sim_nodes, sim_ppn, sim_steps, workers, save):
                                                   run_command="auto",
                                                   exe_args=exe_args)
 
-    vis_settings.set_nodes(1)
+    try:
+        vis_settings.set_nodes(1)
+    except AttributeError:
+        pass
+
     vis_settings.set_tasks(1)
     vis_settings.set_cpus_per_task(workers)
 
