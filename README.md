@@ -79,6 +79,15 @@ module unload atp perftools-base cray-libsci
 export CRAYPE_LINK_TYPE=dynamic
 ```
 
+### CMake
+
+Some systems (e.g. Theta) may have a default version of CMake which is insufficient for building the SmartRedis library
+(v3.13 or later is required).  It is recommended that CMake is installed via conda:
+
+```bash
+conda install cmake
+```
+
 ### git-lfs
 
 SmartSim requires `git-lfs`. Install and configure it via the following commands
@@ -103,7 +112,7 @@ Install all of these requirements by running
 ```bash
 cd smartsim-lammps/melt
 pip install -r requirements.txt
-smart --device cpu
+smart build --device cpu
 ```
 
 ## Setup
