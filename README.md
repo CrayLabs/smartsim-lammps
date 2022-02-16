@@ -69,7 +69,7 @@ git clone --recursive https://github.com/CrayLabs/smartsim-lammps
 You will also need the SmartRedis repository. The lammps build step later assumes that SmartRedis is in a directory parallel to ``smartsim-lammps`` named ``SmartRedis``.
 
 ```bash
-git clone https://github.com/CrayLabs/SmartRedis
+git clone https://github.com/CrayLabs/SmartRedis --branch v0.3.0
 cd SmartRedis
 make lib
 ```
