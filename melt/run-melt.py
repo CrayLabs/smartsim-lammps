@@ -37,6 +37,9 @@ def create_visualizer(experiment, sim_nodes, sim_ppn, sim_steps, workers, save):
                 f"--workers={workers}",
                 f"--steps={sim_steps}"]
 
+    if save:
+        exe_args.append("--save")
+
     vis_settings = experiment.create_run_settings("python",
                                                   run_command="auto",
                                                   exe_args=exe_args)
