@@ -14,7 +14,7 @@ vis_workers=64   # number of workers to pull data for the visualization (max = n
 
 module unload atp
 module load miniconda-3/2021-07-28
-conda activate /home/spartee/dev/miniconda/envs/smartsim/
+conda activate /PATH/TO/CONDA/ENVS/smartsim-lammps
 export SMARTSIM_LOG_LEVEL=debug
 
 python run-melt.py --sim_nodes=$simnodes --sim_ppn=$simppn --sim_steps=$simsteps --sim_scale=$simscale \
