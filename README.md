@@ -38,7 +38,7 @@ MiniConda can be installed via `wget` of an appropriate installation script, suc
 
  ```https://docs.conda.io/en/latest/miniconda.html#linux-installers```
 
-Theta users: on Theta, MiniConda is available through the module system and can be activated via the command 
+Theta users: on Theta, MiniConda is available through the module system and can be activated via the command
 
 ```module load miniconda-3```
 
@@ -46,7 +46,16 @@ We recommend creating a separate environment for SmartSim and lammps
 
 ```bash
 conda create --name=smartsim-lammps python=3.8.5
-conda activate smartsim-lammps 
+conda activate smartsim-lammps
+```
+
+### CMake
+
+Some systems (e.g. Theta) may have a default version of CMake which is insufficient for building the SmartRedis library
+(v3.13 or later is required).  It is recommended that CMake is installed via conda:
+
+```bash
+conda install cmake
 ```
 
 ### Repositories
@@ -60,7 +69,7 @@ git clone --recursive https://github.com/CrayLabs/smartsim-lammps
 You will also need the SmartRedis repository. The lammps build step later assumes that SmartRedis is in a directory parallel to ``smartsim-lammps`` named ``SmartRedis``.
 
 ```bash
-git clone https://github.com/CrayLabs/SmartRedis
+git clone https://github.com/CrayLabs/SmartRedis --branch v0.3.0
 cd SmartRedis
 make lib
 ```
@@ -93,8 +102,8 @@ git-lfs install
 The following requirements will need to be installed in a Python environment on your system.
 
 ```text
-smartsim==0.3.2
-smartredis==0.2.0
+smartsim==0.4.0
+smartredis==0.3.0
 ipyvolume==0.5.2
 ```
 
@@ -103,7 +112,7 @@ Install all of these requirements by running
 ```bash
 cd smartsim-lammps/melt
 pip install -r requirements.txt
-smart --device cpu
+smart build --device cpu
 ```
 
 ## Setup
@@ -114,7 +123,7 @@ modules loaded and environment setup.
 
 ```bash
 cd smartsim-lammps/lammps/cmake
-mkdir build 
+mkdir build
 cd build
 CC=cc CXX=CC cmake .. -DBUILD_MPI=yes -DPKG_SMARTSIM=yes
 make -j 4 # or higher if you have more procs
