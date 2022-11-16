@@ -1,4 +1,4 @@
 
-smartsim==0.4.0
-smartredis==0.3.0
+smartsim==0.4.1
+smartredis==0.3.1
 ipyvolume==0.5.2
