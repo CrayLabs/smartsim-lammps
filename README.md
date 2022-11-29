@@ -69,7 +69,7 @@ git clone --recursive https://github.com/CrayLabs/smartsim-lammps
 You will also need the SmartRedis repository. The lammps build step later assumes that SmartRedis is in a directory parallel to ``smartsim-lammps`` named ``SmartRedis``.
 
 ```bash
-git clone https://github.com/CrayLabs/SmartRedis --branch v0.3.0
+git clone https://github.com/CrayLabs/SmartRedis --branch v0.3.1
 cd SmartRedis
 make lib
 ```
@@ -102,8 +102,8 @@ git-lfs install
 The following requirements will need to be installed in a Python environment on your system.
 
 ```text
-smartsim==0.4.0
-smartredis==0.3.0
+smartsim==0.4.1
+smartredis==0.3.1
 ipyvolume==0.5.2
 ```
 

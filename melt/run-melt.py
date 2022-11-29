@@ -28,13 +28,12 @@ def create_lammps_model(experiment, sim_nodes, sim_ppn, steps, scale):
     lammps.attach_generator_files(to_configure=["./in.melt"])
     return lammps
 
-def create_visualizer(experiment, sim_nodes, sim_ppn, sim_steps, workers, save):
+def create_visualizer(experiment, sim_nodes, sim_ppn, sim_steps, client_threads, save):
     # create atom visualizer model reference
 
     total_sim_ranks = int(sim_nodes) * int(sim_ppn)
     exe_args = ["data_analysis.py",
                 f"--ranks={total_sim_ranks}",
-                f"--workers={workers}",
                 f"--steps={sim_steps}"]
 
     if save:
@@ -48,7 +47,8 @@ def create_visualizer(experiment, sim_nodes, sim_ppn, sim_steps, workers, save):
         vis_settings.set_nodes(1)
 
     vis_settings.set_tasks(1)
-    vis_settings.set_cpus_per_task(workers)
+    vis_settings.set_cpus_per_task(client_threads)
+    vis_settings.update_env({"SR_THREAD_COUNT": client_threads})
 
     vis_model = experiment.create_model("atom_viz", vis_settings)
     vis_model.attach_generator_files(to_copy=["./data_analysis.py"])
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     parser.add_argument("--db_nodes", type=int, default=1, help="Number of nodes for the database")
     parser.add_argument("--db_port", type=int, default=6780, help="Port for the database")
     parser.add_argument("--db_interface", type=str, default="ipogif0", help="Network interface for the database")
-    parser.add_argument("--vis_workers", type=int, default=48, help="Number of workers to pull data for visualizations")
+    parser.add_argument("--client_threads", type=int, default=24, help="Number of client threads for dataset aggregation")
     parser.add_argument("--save", action="store_true", help="Save plotted figures to file")
     args = parser.parse_args()
 
@@ -83,7 +83,7 @@ if __name__ == "__main__":
                             args.sim_nodes,
                             args.sim_ppn,
                             args.sim_steps,
-                            args.vis_workers,
+                            args.client_threads,
                             args.save)
 
     db = Orchestrator(launcher="auto",

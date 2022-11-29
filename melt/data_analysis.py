@@ -1,64 +1,32 @@
 import time
 import psutil
+import os
 import numpy as np
-from multiprocessing import Pool
 from smartredis import Client
 import ipyvolume as ipv
 
-class Worker:
-    def __init__(self):
-        self.client = Client(cluster=True)
-
-    def __call__(self, key):
-        # returns a tuple of np.arrays
-        key_exists = self.client.poll_dataset(key, 20, 1000)
-        if not key_exists:
-            raise Exception("Timeout waiting for new data to plot")
-
-        dataset = self.client.get_dataset(key)
-        atom_data = (dataset.get_tensor("atom_x"),
-                     dataset.get_tensor("atom_y"),
-                     dataset.get_tensor("atom_z"))
-        return atom_data
-
-def worker_init():
-    #print(f"Starting worker process on cpu {psutil.Process().cpu_num()}")
-    global worker
-    worker = Worker()
-
-def run_worker(key):
-    return worker(key)
-
-class WorkerPool:
-    def __init__(self, num_workers):
-        self.pool = Pool(processes=num_workers, initializer=worker_init)
-
-    def get_data(self, keys):
-        return self.pool.map(run_worker, keys)
-
-    def shutdown(self):
-        self.pool.close()
-        self.pool.join()
-
-
-def plot_timestep(worker_pool, n_ranks, t_step):
+def plot_timestep(client, n_ranks, t_step):
 
     # Create empty lists that we will fill with simulation data
     atom_x = []
     atom_y = []
     atom_z = []
 
-    dataset_keys = []
-    for i in range(n_ranks):
-        dataset_keys.append(f"atoms_rank_{i}_tstep_{t_step}")
+    # Poll for all ranks to have sent their timestep data
+    list_name = f"tstep_{t_step}"
+    client.poll_list_length(list_name, n_ranks, 50, 10000)
 
+    # Multithreaded retrieval of timestep datasets
     data_start = time.time()
-    ts_data = worker_pool.get_data(dataset_keys)
-    for data in ts_data:
-        atom_x.extend(data[0])
-        atom_y.extend(data[1])
-        atom_z.extend(data[2])
+    datasets = client.get_datasets_from_list(f"tstep_{t_step}")
     timings["data"] += time.time() - data_start
+    dt = time.time() - data_start
+    print(f"Data retrieval took {dt}")
+    for dataset in datasets:
+        atom_x.extend(dataset.get_tensor("atom_x"))
+        atom_y.extend(dataset.get_tensor("atom_y"))
+        atom_z.extend(dataset.get_tensor("atom_z"))
+
 
     # convert to numpy
     x = np.array(atom_x)
@@ -75,6 +43,9 @@ def plot_timestep(worker_pool, n_ranks, t_step):
 
     timings["plot"] += time.time() - plot_start
 
+    dt = time.time() - plot_start
+    print(f"Data plot took {dt}")
+
     # add to final list for animation
     ATOMS_X.append(x)
     ATOMS_Y.append(y)
@@ -86,7 +57,6 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--ranks", type=int, default=384)
     argparser.add_argument("--steps", type=int, default=10000)
-    argparser.add_argument("--workers", type=int, default=48)
     argparser.add_argument("--save", action="store_true")
     args = argparser.parse_args()
 
@@ -96,18 +66,20 @@ if __name__ == "__main__":
         "animation": 0.0
     }
 
-    # start pool of workers
-    work_pool = WorkerPool(num_workers=args.workers)
-
+    print(f"Using {os.environ['SR_THREAD_COUNT']} client threads.")
+    # Position arrays for animation creation
     ATOMS_X = []
     ATOMS_Y = []
     ATOMS_Z = []
 
+    # Initialize client outside of timestep loop for efficiency
+    client = Client(cluster=True)
+
+    # Gather and plot data for each time step
     for i in range(0, args.steps, 100):
-        plot_timestep(work_pool, args.ranks, i)
+        plot_timestep(client, args.ranks, i)
 
-    work_pool.shutdown()
-
+    # Create the animation
     if args.save:
         anim_start = time.time()
         ani = ipv.scatter(np.array(ATOMS_X),
